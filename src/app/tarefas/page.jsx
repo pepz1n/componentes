@@ -1,6 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import TableComponent from '@/components/TableComponent';
+import api from '@/utils/axios';
 
 
 export default function TarefasPage() {
@@ -12,15 +13,31 @@ export default function TarefasPage() {
 
   const formularioVazio = { titulo: '', descricao: '', status: 'pendente' }
   
-  const [tarefas, setTarefas] = useState([
-    { id: 1, titulo: 'Configurar ambiente', descricao: 'Instalar dependências do projeto', status: 'concluida' },
-    { id: 2, titulo: 'Criar tela de login', descricao: 'Formulário com validação', status: 'em_andamento' },
-    { id: 3, titulo: 'Escrever testes', descricao: 'Cobertura mínima de 80%', status: 'pendente' },
+  const [tarefas, setTarefas] = useState([]);
+  const [colunas, setColunas] = useState([
+    {label: 'Id', key: 'id' },
+    {label: 'Descrição', key: 'descricao' },
+    {label: 'Criado em', key: 'created_at' },
   ])
   const [dialogAberto, setDialogAberto] = useState(false)
   const [editando, setEditando] = useState(null)
   const [form, setForm] = useState(formularioVazio)
   
+
+
+  async function getTarefas() {
+    try {
+      const dados = await api.get('/tarefa/get-all');
+      setTarefas(dados.data)      
+    } catch (error) {
+      console.log(error.messsage)
+    }
+  }
+
+  useEffect(() => {
+    getTarefas()
+  }, []);
+
   function abrirNova() {
     setEditando(null)
     setForm(formularioVazio)
@@ -63,7 +80,8 @@ export default function TarefasPage() {
         funcaoEditar={abrirEdicao}
         funcaoExcluir={excluir}
         titulo={"Tarefas"}
-      />  
+        colunas={colunas}
+      />
 
       {dialogAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">

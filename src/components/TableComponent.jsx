@@ -10,7 +10,9 @@ export default function TableComponent({
   botaocriar = true,
   funcaoEditar,
   funcaoExcluir,
-  titulo
+  titulo,
+  colunas,
+  acoes = true
 }) {
   const statusLabel = {
     pendente: 'Pendente',
@@ -30,11 +32,7 @@ export default function TableComponent({
 
   const tarefasFiltradas = useMemo(() => {
       const termo = busca.toLowerCase()
-      return dados.filter(
-        (t) =>
-          t.titulo.toLowerCase().includes(termo) ||
-          t.descricao.toLowerCase().includes(termo)
-      )
+      return dados
     }, [dados, busca])
   
     const totalPaginas = Math.max(1, Math.ceil(tarefasFiltradas.length / itensPorPagina))
@@ -74,10 +72,14 @@ export default function TableComponent({
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 text-textos uppercase text-xs">
             <tr className='border-b border-gray-200'>
-              <th className="px-4 py-3 text-left">Título</th>
-              <th className="px-4 py-3 text-left">Descrição</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-right">Ações</th>
+              {colunas.map((coluna, i) => {
+                return (
+                  <th className="px-4 py-3 text-left" key={i}>{coluna.label}</th>
+                )
+              })}
+              {acoes &&
+                  <th className="px-4 py-3 text-right">ações</th>
+              }
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -89,15 +91,19 @@ export default function TableComponent({
               </tr>
             )}
             {dadosPagina.map((item) => (
-              <tr key={item.id} className=" hover:bg-zinc-50 transition-colors border-b border-gray-200">
-                <td className="px-4 py-3 text-zinc-800">{item.titulo}</td>
-                <td className="px-4 py-3 text-zinc-500">{item.descricao}</td>
-                <td className="px-4 py-3">
-                  {item.status && <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[item.status]}`}>
-                    {statusLabel[item.status]}
-                  </span>}
-                </td>
-                <td className="px-4 py-3 text-right space-x-2">
+              <tr key={item.id} className="hover:bg-zinc-50 transition-colors border-b border-gray-200">
+                {colunas.map((coluna) => (
+                  <td key={coluna.key} className="px-4 py-3" style={item.finalizado ? {background: 'green'} : { background: 'red' }}>
+                    {coluna.key === 'status' ? (
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[item.status]}`}>
+                        {statusLabel[item.status]}
+                      </span>
+                    ) : (
+                      <span>{item[coluna.key]}</span>
+                    )}
+                  </td>
+                ))}
+                {acoes && <td className="px-4 py-3 text-right space-x-2">
                   <button
                     onClick={() => funcaoEditar(item)}
                     className="hover:text-blue-800 bg-blue-600 hover:bg-blue-200 text-white text-sm font-medium px-3 py-1 rounded-md transition-colors"
@@ -105,12 +111,12 @@ export default function TableComponent({
                     <FaPen />
                   </button>
                   <button
-                    onClick={() => funcaoExcluir(tarefa.id)}
-                    className="hover:bg-red-200 bg-red-500 hover:text-red-700  text-white text-sm font-medium px-3 py-1 rounded-md transition-colors"
+                    onClick={() => funcaoExcluir(item.id)}
+                    className="hover:bg-red-200 bg-red-500 hover:text-red-700 text-white text-sm font-medium px-3 py-1 rounded-md transition-colors"
                   >
                     <MdDelete />
                   </button>
-                </td>
+                </td>}
               </tr>
             ))}
           </tbody>
